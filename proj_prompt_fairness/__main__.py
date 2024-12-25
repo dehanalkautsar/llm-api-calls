@@ -24,6 +24,6 @@ examp = [
     }
 ]
 
-print("package", )
+
 modman = ModelManager()
 modman.run_grid(examp)

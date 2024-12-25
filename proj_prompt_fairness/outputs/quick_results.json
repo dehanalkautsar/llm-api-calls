@@ -1,0 +1,16 @@
+{
+    "gpt-4o-mini-sep-temperature_1-top_p_1": [
+        {
+            "id": "id1",
+            "content": "The capital of Indonesia is Jakarta."
+        },
+        {
+            "id": "id2",
+            "content": "The capital of Spain is Madrid."
+        },
+        {
+            "id": "id3",
+            "content": "The capital of Japan is Tokyo."
+        }
+    ]
+}
