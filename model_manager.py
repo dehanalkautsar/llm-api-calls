@@ -68,9 +68,14 @@ class CustomOpenAIAgent():
                     "project_name" : config['project_name']
                 }
             )
-
-            print("batches created!")
-            # TODO : SAVE BATCH NUMBERS IN A FILE
+            
+            print("batch created!")
+            print(f"batch id : {batch_obj.id}")
+            
+            batchid_file = os.path.join(package_dir, f"{config['project_name']}/batchid_{id_prefix}.txt")
+            with open(batchid_file, "w") as bidf:
+                bidf.write(batch_obj.id)
+            print(f"batch id saved in {batchid_file}")
     
     def check_and_download_batches(self, batch_numbers, package_name=None):
         for bn in batch_numbers:
