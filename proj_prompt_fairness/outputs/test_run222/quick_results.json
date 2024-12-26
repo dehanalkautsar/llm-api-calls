@@ -1,0 +1,20 @@
+{
+    "gpt-4o-mini-sep-temperature_1-top_p_1": [
+        {
+            "id": "id1",
+            "content": "The capital of China is Beijing."
+        }
+    ],
+    "gpt-4o-mini-sep-temperature_0-top_p_1": [
+        {
+            "id": "id1",
+            "content": "The capital of Lebanon is Beirut."
+        }
+    ],
+    "gpt-4o-mini-sep-temperature_1-top_p_0": [
+        {
+            "id": "id1",
+            "content": "The capital of Slovakia is Bratislava."
+        }
+    ]
+}

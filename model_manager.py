@@ -100,24 +100,16 @@ class CustomOpenAIAgent():
             with open(batchid_file, "a") as bidf:
                 bidf.write(batch_obj.id + "\n")
     
-    def check_and_download_batches(self, batch_numbers, package_name=None):
+    def check_and_download_batches(self, project_name, run_name, batch_numbers):
+        raw_results = []
+        quickview = {}
         for bn in batch_numbers:
             batch = self.model.batches.retrieve(bn)
+            print(f"batch_status {bn}", batch.status)
             if batch.status == "completed":
                 file_content = self.model.files.content(batch.output_file_id)
-                
-                if(package_name):
-                    base_output_path = f"{package_name}/outputs"
-                else:
-                    base_output_path = "outputs"
-                os.makedirs(base_output_path, exist_ok=True)
+                raw_results.append(file_content.content.decode("utf-8"))
 
-                # save raw output
-                with open(f"{base_output_path}/raw_results.jsonl", "wb") as f:
-                    f.write(file_content.content)
-
-                # quickview save
-                quickview = {}
                 dct_strings = file_content.content.decode('utf-8').strip().split("\n")
                 for dct_string in dct_strings:
                     data = json.loads(dct_string)
@@ -132,9 +124,18 @@ class CustomOpenAIAgent():
                             "id" : data["custom_id"].split("_")[-1],
                             "content" : data["response"]["body"]["choices"][0]["message"]["content"],
                         }]
+            else:
+                print(f"batch not done. batch status {batch.status}\nREMINDER: ye might need to rerun the check_results script to get the full results")
+        
+        base_output_path = os.path.join(os.path.dirname(__file__), f"{project_name}/outputs/{run_name}")
 
-                with open(f"{base_output_path}/quick_results.json", "w") as qf:
-                    json.dump(quickview, qf, indent=4)
+        # save raw
+        with open(f"{base_output_path}/raw_results.jsonl", "w") as f:
+            f.write("".join(raw_results))
+        
+        # save quick results
+        with open(f"{base_output_path}/quick_results.json", "w") as qf:
+            json.dump(quickview, qf, indent=4)
 
     @staticmethod
     def get_prefix_from_id(id_string):
