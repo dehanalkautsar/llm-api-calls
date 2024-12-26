@@ -108,9 +108,9 @@ class CustomOpenAIAgent():
             print(f"batch_status {bn}", batch.status)
             if batch.status == "completed":
                 file_content = self.model.files.content(batch.output_file_id)
-                raw_results.append(file_content.content.decode("utf-8"))
-
-                dct_strings = file_content.content.decode('utf-8').strip().split("\n")
+                file_content_string = file_content.content.decode('utf-8')
+                raw_results.append(file_content_string)
+                dct_strings = file_content_string.strip().split("\n")
                 for dct_string in dct_strings:
                     data = json.loads(dct_string)
                     prefix = self.get_prefix_from_id(data["custom_id"])
