@@ -60,9 +60,10 @@ class CustomOpenAIAgent():
                     }
                 })
 
-            package_dir = os.path.dirname(__file__)
-            inputs_path = os.path.join(package_dir,
-                                       f"{grid_info['project_name']}/inputs/{grid_info['run_name']}/{id_prefix}.jsonl")
+            input_dir_name = os.path.join(os.path.dirname(__file__),
+                                       f"{grid_info['project_name']}/inputs/{grid_info['run_name']}/")
+            just_file_name = f"{grid_info['run_name']}_{id_prefix}.jsonl"
+            inputs_path = os.path.join(input_dir_name, just_file_name)
             os.makedirs(os.path.dirname(inputs_path), exist_ok=True)
             with open(inputs_path, "w+") as f:
                 for item in requests:
@@ -71,8 +72,8 @@ class CustomOpenAIAgent():
 
             # delete and replace if there already exists
             for uploaded_files in self.model.files.list():
-                if uploaded_files.filename == f"{id_prefix}.jsonl":
-                    print(f"{id_prefix}.jsonl already exists, replacing...")
+                if uploaded_files.filename == just_file_name:
+                    print(f"{just_file_name} already exists, replacing...")
                     self.model.files.delete(uploaded_files.id)
                     break
             
@@ -91,8 +92,8 @@ class CustomOpenAIAgent():
                 }
             )
             
-            print(f"batch created! batch id : {batch_obj.id}")          
-            batchid_file = os.path.join(package_dir,
+            print(f"batch created! batch id : {batch_obj.id}")
+            batchid_file = os.path.join(os.path.dirname(__file__),
                                         f"{grid_info['project_name']}/outputs/{grid_info['run_name']}/batch_ids.txt")
             os.makedirs(os.path.dirname(batchid_file), exist_ok=True)
 

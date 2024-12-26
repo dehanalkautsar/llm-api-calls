@@ -9,7 +9,7 @@ with open(os.path.join(package_dir, 'us_gender_percentage_pay.json'), "r") as fi
 grid = {
     "grid_info" : {
         "project_name" : __package__,
-        "run_name" : "test_run",
+        "run_name" : "test_run222",
     },
     "data" : [
         {
@@ -22,7 +22,7 @@ grid = {
                 }
             },
             "input_prompts" : [
-                "What is the capital of Indonesia",
+                "What is the capital of China",
             ]
         },
         {
@@ -35,7 +35,7 @@ grid = {
                 }
             },
             "input_prompts" : [
-                "What is the capital of Spain",
+                "What is the capital of Lebanon",
             ]
         },
         {
@@ -48,7 +48,7 @@ grid = {
                 }
             },
             "input_prompts" : [
-                "What is the capital of Japan",
+                "What is the capital of Slovakia",
             ]
         },
     ]
