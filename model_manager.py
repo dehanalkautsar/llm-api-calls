@@ -6,11 +6,29 @@ load_dotenv()
 
 OPENAI_MODELS = ["gpt-4o-mini"]
 
+class ModelManager:
+    def run_grid(self, grid: List[Dict[Any, Any]]):
+        for job in grid["data"]:
+            agent = self._instantiate_model_based_on_name(job["config"]["model_name"])
+            agent(grid["grid_info"],
+                  job["config"],
+                  job["input_prompts"])
+        print("grid finished submitting/running.")
+
+    def _instantiate_model_based_on_name(self, model_name):
+        if model_name in OPENAI_MODELS:
+            return CustomOpenAIAgent()
+        else:
+            raise ValueError(f"Invalid or unregistered model name! {model_name}")
+
 class CustomOpenAIAgent():
     def __init__(self):
         self.model = OpenAI()
     
-    def __call__(self, config, input_prompts) -> Union[str, List[str]]:
+    def __call__(self,
+                 grid_info,
+                 config,
+                 input_prompts) -> Union[str, List[str]]:
         """
         calls openai with the config provided. defaults to async calls (except when it's on the same window)
         setting n_concurrent = 1 is just single calls
@@ -23,7 +41,8 @@ class CustomOpenAIAgent():
             id_prefix = f"{config["model_name"]}-{in1ctx}"
 
         if config["in_one_context"]:
-            print("yea do in one")
+            # TODO: implement one-context prompting (previous messages)
+            print("TODO: implement one-context prompting (previous messages)")
         else:
             requests = []
             for idx, prompt in enumerate(input_prompts):
@@ -42,7 +61,9 @@ class CustomOpenAIAgent():
                 })
 
             package_dir = os.path.dirname(__file__)
-            inputs_path = os.path.join(package_dir, f"{config['project_name']}/inputs/{id_prefix}.jsonl")
+            inputs_path = os.path.join(package_dir,
+                                       f"{grid_info['project_name']}/inputs/{grid_info['run_name']}/{id_prefix}.jsonl")
+            os.makedirs(os.path.dirname(inputs_path), exist_ok=True)
             with open(inputs_path, "w+") as f:
                 for item in requests:
                     json.dump(item, f)
@@ -65,17 +86,18 @@ class CustomOpenAIAgent():
                 endpoint="/v1/chat/completions",
                 completion_window="24h",
                 metadata={
-                    "project_name" : config['project_name']
+                    "project_name" : grid_info['project_name'],
+                    "run_name" : grid_info['run_name']
                 }
             )
             
-            print("batch created!")
-            print(f"batch id : {batch_obj.id}")
-            
-            batchid_file = os.path.join(package_dir, f"{config['project_name']}/batchid_{id_prefix}.txt")
-            with open(batchid_file, "w") as bidf:
-                bidf.write(batch_obj.id)
-            print(f"batch id saved in {batchid_file}")
+            print(f"batch created! batch id : {batch_obj.id}")          
+            batchid_file = os.path.join(package_dir,
+                                        f"{grid_info['project_name']}/outputs/{grid_info['run_name']}/batch_ids.txt")
+            os.makedirs(os.path.dirname(batchid_file), exist_ok=True)
+
+            with open(batchid_file, "a") as bidf:
+                bidf.write(batch_obj.id + "\n")
     
     def check_and_download_batches(self, batch_numbers, package_name=None):
         for bn in batch_numbers:
@@ -117,15 +139,3 @@ class CustomOpenAIAgent():
     def get_prefix_from_id(id_string):
         spl = id_string.split("_")
         return "_".join(spl[:-1])
-
-class ModelManager:
-    def _instantiate_model_based_on_name(self, model_name):
-        if model_name in OPENAI_MODELS:
-            return CustomOpenAIAgent()
-        else:
-            raise ValueError(f"Invalid or unregistered model name! {model_name}")
-        
-    def run_grid(self, grid: List[Dict[Any, Any]]):
-        for job in grid:
-            agent = self._instantiate_model_based_on_name(job["config"]["model_name"])
-            agent(job["config"], job["input_prompts"])
