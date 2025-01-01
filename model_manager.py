@@ -8,18 +8,43 @@ OPENAI_MODELS = ["gpt-4o-mini"]
 
 class ModelManager:
     def run_grid(self, grid: List[Dict[Any, Any]]):
+        in_one_context_idxes = []
+        
+        # check if inputs (only the i1c's) are valid
         for job in grid["data"]:
+            if job["config"]["in_one_context"]:
+                self._is_i1c_input_shape_valid(job["input_prompts"])
+        
+        # submit all first
+        for jobidx, job in enumerate(grid["data"]):
+            if job["config"]["in_one_context"]:
+                in_one_context_idxes.append(jobidx)
             agent = self._instantiate_model_based_on_name(job["config"]["model_name"])
             agent(grid["grid_info"],
                   job["config"],
                   job["input_prompts"])
-        print("grid finished submitting/running.")
+        print("grid finished submitting/running. continuing with in one context prompts...")
+
+        if len(in_one_context_idxes) > 0:
+            print("in one context prompts detected, running...")
+            for i in in_one_context_idxes:
+                print(f"running ... {i}")
 
     def _instantiate_model_based_on_name(self, model_name):
         if model_name in OPENAI_MODELS:
             return CustomOpenAIAgent()
         else:
             raise ValueError(f"Invalid or unregistered model name! {model_name}")
+        
+    def _is_i1c_input_shape_valid(self, i1c_inputs):
+        if(type(i1c_inputs[0]) == list):
+            first_length = len(i1c_inputs[0])
+            for inner in i1c_inputs:
+                if len(inner) != first_length:
+                    raise ValueError("len must be the same for each chat window")
+            return True
+        else:
+            raise ValueError("i1c_inputs must be a 2D list of strings")
 
 class CustomOpenAIAgent():
     def __init__(self):
@@ -28,7 +53,8 @@ class CustomOpenAIAgent():
     def __call__(self,
                  grid_info,
                  config,
-                 input_prompts) -> Union[str, List[str]]:
+                 input_prompts,
+                 history = None) -> Union[str, List[str]]:
         """
         calls openai with the config provided. defaults to async calls (except when it's on the same window)
         setting n_concurrent = 1 is just single calls
@@ -40,65 +66,80 @@ class CustomOpenAIAgent():
         else:
             id_prefix = f"{config["model_name"]}-{in1ctx}"
 
-        if config["in_one_context"]:
-            # TODO: implement one-context prompting (previous messages)
-            print("TODO: implement one-context prompting (previous messages)")
-        else:
-            requests = []
-            for idx, prompt in enumerate(input_prompts):
-                requests.append({
-                    "custom_id": id_prefix + f"_id{str(idx+1)}",
-                    "method": "POST",
-                    "url": "/v1/chat/completions",
-                    "body": {
-                        "model": config["model_name"],
-                        "messages": [{
-                            "role": "user",
-                            "content": prompt
-                        }],
-                        **config.get("args", {})
-                    }
-                })
+        # constructing the requests
+        requests = []
+        
+        if(config["in_one_context"]):
+            CURRENT_IDX = 1
+            input_prompts = [row[CURRENT_IDX] for row in input_prompts]
 
-            input_dir_name = os.path.join(os.path.dirname(__file__),
-                                       f"{grid_info['project_name']}/inputs/{grid_info['run_name']}/")
-            just_file_name = f"{grid_info['run_name']}_{id_prefix}.jsonl"
-            inputs_path = os.path.join(input_dir_name, just_file_name)
-            os.makedirs(os.path.dirname(inputs_path), exist_ok=True)
-            with open(inputs_path, "w+") as f:
-                for item in requests:
-                    json.dump(item, f)
-                    f.write('\n')
+        print("INPUT PROMPTS")
+        print(input_prompts)
 
-            # delete and replace if there already exists
-            for uploaded_files in self.model.files.list():
-                if uploaded_files.filename == just_file_name:
-                    print(f"{just_file_name} already exists, replacing...")
-                    self.model.files.delete(uploaded_files.id)
-                    break
-            
-            batch_input_file = self.model.files.create(
-                file=open(inputs_path, "rb"),
-                purpose="batch"
-            )
-
-            batch_obj = self.model.batches.create(
-                input_file_id=batch_input_file.id,
-                endpoint="/v1/chat/completions",
-                completion_window="24h",
-                metadata={
-                    "project_name" : grid_info['project_name'],
-                    "run_name" : grid_info['run_name']
+        for idx, prompt in enumerate(input_prompts):
+            requests.append({
+                "custom_id": id_prefix + f"_id{str(idx+1)}",
+                "method": "POST",
+                "url": "/v1/chat/completions",
+                "body": {
+                    "model": config["model_name"],
+                    "messages": [{
+                        "role": "user",
+                        "content": prompt
+                    }],
+                    **config.get("args", {})
                 }
-            )
-            
-            print(f"batch created! batch id : {batch_obj.id}")
-            batchid_file = os.path.join(os.path.dirname(__file__),
-                                        f"{grid_info['project_name']}/outputs/{grid_info['run_name']}/batch_ids.txt")
-            os.makedirs(os.path.dirname(batchid_file), exist_ok=True)
+            })
 
-            with open(batchid_file, "a") as bidf:
-                bidf.write(batch_obj.id + "\n")
+        input_dir_name = os.path.join(os.path.dirname(__file__),
+                                    f"{grid_info['project_name']}/inputs/{grid_info['run_name']}/")
+        just_file_name = f"{grid_info['run_name']}_{id_prefix}.jsonl"
+        inputs_path = os.path.join(input_dir_name, just_file_name)
+        os.makedirs(os.path.dirname(inputs_path), exist_ok=True)
+        with open(inputs_path, "w+") as f:
+            for item in requests:
+                json.dump(item, f)
+                f.write('\n')
+
+        # # delete and replace if there already exists
+        # for uploaded_files in self.model.files.list():
+        #     if uploaded_files.filename == just_file_name:
+        #         print(f"{just_file_name} already exists, replacing...")
+        #         self.model.files.delete(uploaded_files.id)
+        #         break
+        
+        # batch_input_file = self.model.files.create(
+        #     file=open(inputs_path, "rb"),
+        #     purpose="batch"
+        # )
+
+        # batch_obj = self.model.batches.create(
+        #     input_file_id=batch_input_file.id,
+        #     endpoint="/v1/chat/completions",
+        #     completion_window="24h",
+        #     metadata={
+        #         "project_name" : grid_info['project_name'],
+        #         "run_name" : grid_info['run_name']
+        #     }
+        # )
+        
+        batch_obj_id = f"this is a mock id from {"i1c" if config["in_one_context"] else "wle"}"
+
+        print(f"batch created! batch id : {batch_obj_id}", end=" ---- ")
+        # print(f"batch created! batch id : {batch_obj.id}", end=" ---- ")
+
+        if(config["in_one_context"]):
+            batchid_path = f"{grid_info['project_name']}/outputs/{grid_info['run_name']}/i1c_batch_ids.txt"
+        else:
+            batchid_path = f"{grid_info['project_name']}/outputs/{grid_info['run_name']}/batch_ids.txt"
+        
+        print(f"saving in: {batchid_path}")
+        batchid_file = os.path.join(os.path.dirname(__file__), batchid_path)
+        os.makedirs(os.path.dirname(batchid_file), exist_ok=True)
+
+        with open(batchid_file, "a") as bidf:
+            bidf.write(batch_obj_id + "\n")
+            # bidf.write(batch_obj.id + "\n")
     
     def check_and_download_batches(self, project_name, run_name, batch_numbers):
         raw_results = []

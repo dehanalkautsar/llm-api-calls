@@ -1,1 +1,0 @@
-{"custom_id": "gpt-4o-mini-sep-temperature_0-top_p_1_id1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "gpt-4o-mini", "messages": [{"role": "user", "content": "What is the capital of Lebanon"}], "temperature": 0, "top_p": 1}}
