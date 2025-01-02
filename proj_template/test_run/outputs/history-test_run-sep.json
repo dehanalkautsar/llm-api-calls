@@ -1,0 +1,66 @@
+{
+    "runtwo-gpt_4o_mini-sep-temperature_1-top_p_1": [
+        [
+            {
+                "role": "user",
+                "content": "What is the capital of Slovakia"
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Slovakia is Bratislava."
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "What is the capital of Ukraine"
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Ukraine is Kyiv."
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "What is the capital of Russia"
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Russia is Moscow."
+            }
+        ]
+    ],
+    "runfour-gpt_4o_mini-sep-temperature_1-top_p_1": [
+        [
+            {
+                "role": "user",
+                "content": "What is the capital of Italy"
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Italy is Rome."
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "What is the capital of Ireland"
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Ireland is Dublin."
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "What is the capital of Spain"
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Spain is Madrid."
+            }
+        ]
+    ]
+}

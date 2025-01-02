@@ -41,8 +41,8 @@ class ModelManager:
                 while(not agent.is_list_of_batch_all_done(batchids) and tries < MAX_CHECK_TRIES):
                     print("waiting for all the ioc batches to finish...")
                     tries += 1
-                    print("sleeping for 2s (change to 3 minutes ntar)")
-                    sleep(2)
+                    print("checking if finished every 3 minutes, waiting for the batch to finish")
+                    sleep(180)
                 
                 if tries == 5:
                     raise TimeoutError("waited 5 times each 3 minutes already")
@@ -128,9 +128,6 @@ class CustomOpenAIAgent():
         # constructing the requests ==================================================
         requests = []
         messages = []
-        
-        # if idx of conversation is not 0, meaning there's a conversation.
-        # update `history` and `input_prompts` from said history            
 
         if config["in_one_context"]:
             input_prompts = [row[ioc_idx] for row in input_prompts]        
@@ -171,31 +168,29 @@ class CustomOpenAIAgent():
         with open(history_path, 'w') as file:
             json.dump(history, file, indent=4)
 
-        # # delete and replace if there already exists
-        # for uploaded_files in self.model.files.list():
-        #     if uploaded_files.filename == just_file_name:
-        #         print(f"{just_file_name} already exists, replacing...")
-        #         self.model.files.delete(uploaded_files.id)
-        #         break
+        # delete and replace if there already exists
+        for uploaded_files in self.model.files.list():
+            if uploaded_files.filename == just_file_name:
+                print(f"{just_file_name} already exists, replacing...")
+                self.model.files.delete(uploaded_files.id)
+                break
         
-        # batch_input_file = self.model.files.create(
-        #     file=open(inputs_path, "rb"),
-        #     purpose="batch"
-        # )
+        batch_input_file = self.model.files.create(
+            file=open(inputs_path, "rb"),
+            purpose="batch"
+        )
 
-        # batch_obj = self.model.batches.create(
-        #     input_file_id=batch_input_file.id,
-        #     endpoint="/v1/chat/completions",
-        #     completion_window="24h",
-        #     metadata={
-        #         "project_name" : grid_info['project_name'],
-        #         "run_name" : grid_info['run_name']
-        #     }
-        # )
+        batch_obj = self.model.batches.create(
+            input_file_id=batch_input_file.id,
+            endpoint="/v1/chat/completions",
+            completion_window="24h",
+            metadata={
+                "project_name" : grid_info['project_name'],
+                "run_name" : grid_info['run_name']
+            }
+        )
         
-        # TODO revert back to this
-        # bid = batch_obj.id
-        bid = "batch_676b91e1eddc8190bf405f41a73026fd"
+        bid = batch_obj.id
         batch_obj_id = f"{batch_name}:{bid}"
 
         print(f"batch created! batch id : {bid}", end=" ---- ")

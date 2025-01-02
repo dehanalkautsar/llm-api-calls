@@ -1,0 +1,138 @@
+{
+    "runone-gpt_4o_mini-ioc-temperature_0-top_p_1": [
+        [
+            {
+                "role": "user",
+                "content": "What is the capital of Malaysia"
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Malaysia is Kuala Lumpur."
+            },
+            {
+                "role": "user",
+                "content": "what is the currency"
+            },
+            {
+                "role": "assistant",
+                "content": "The currency of Malaysia is the Malaysian Ringgit, abbreviated as MYR."
+            },
+            {
+                "role": "user",
+                "content": "what is the language"
+            },
+            {
+                "role": "assistant",
+                "content": "The official language of Malaysia is Malay, also known as Bahasa Malaysia. English is also widely spoken and used in business and education."
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "What is the capital of Indonesia"
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Indonesia is Jakarta."
+            },
+            {
+                "role": "user",
+                "content": "what is the currency"
+            },
+            {
+                "role": "assistant",
+                "content": "The currency of Indonesia is the Indonesian rupiah, abbreviated as IDR."
+            },
+            {
+                "role": "user",
+                "content": "what is the language"
+            },
+            {
+                "role": "assistant",
+                "content": "The official language of Indonesia is Indonesian, known as \"Bahasa Indonesia.\""
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "What is the capital of Singapore"
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Singapore is Singapore itself. Singapore is a city-state, meaning that the city and the country are one and the same."
+            },
+            {
+                "role": "user",
+                "content": "what is the currency"
+            },
+            {
+                "role": "assistant",
+                "content": "The currency of Singapore is the Singapore Dollar, abbreviated as SGD."
+            },
+            {
+                "role": "user",
+                "content": "what is the language"
+            },
+            {
+                "role": "assistant",
+                "content": "Singapore has four official languages: English, Mandarin Chinese, Malay, and Tamil. English is the most widely spoken and serves as the main language of administration and business."
+            }
+        ]
+    ],
+    "runthree-gpt_4o_mini-ioc-temperature_0-top_p_0": [
+        [
+            {
+                "role": "user",
+                "content": "What is the capital of Vietnam"
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Vietnam is Hanoi."
+            },
+            {
+                "role": "user",
+                "content": "what is the currency"
+            },
+            {
+                "role": "assistant",
+                "content": "The currency of Vietnam is the Vietnamese \u0111\u1ed3ng, abbreviated as VND."
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "What is the capital of Thailand"
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Thailand is Bangkok."
+            },
+            {
+                "role": "user",
+                "content": "what is the currency"
+            },
+            {
+                "role": "assistant",
+                "content": "The currency of Thailand is the Thai Baht, abbreviated as THB."
+            }
+        ],
+        [
+            {
+                "role": "user",
+                "content": "What is the capital of Laos"
+            },
+            {
+                "role": "assistant",
+                "content": "The capital of Laos is Vientiane."
+            },
+            {
+                "role": "user",
+                "content": "what is the currency"
+            },
+            {
+                "role": "assistant",
+                "content": "The currency of Laos is the Lao kip, abbreviated as LAK."
+            }
+        ]
+    ]
+}
