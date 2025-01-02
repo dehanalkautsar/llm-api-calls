@@ -13,12 +13,12 @@ class ModelManager:
         in_one_context_idxes = []
         
         # check if inputs (only the ioc's) are valid
-        for job in grid["data"]:
+        for job in grid["batches"]:
             if job["config"]["in_one_context"]:
                 self._is_ioc_input_shape_valid(job["input_prompts"])
         
         # submit all first
-        for jobidx, job in enumerate(grid["data"]):
+        for jobidx, job in enumerate(grid["batches"]):
             if job["config"]["in_one_context"]:
                 in_one_context_idxes.append(jobidx)
             agent = self._instantiate_model_based_on_name(job["config"]["model_name"])
@@ -26,40 +26,46 @@ class ModelManager:
                             job["config"],
                             job["input_prompts"])
         print("grid finished submitting/running. continuing with in one context prompts...")
-        
-        # if len(in_one_context_idxes) > 0:
-        #     longest_ioc = max([len(grid["data"][i]["input_prompts"][0]) for i in in_one_context_idxes])
-        #     print("in one context prompts detected, running...")
+        if len(in_one_context_idxes) > 0:
+            print("in one context prompts detected, running...")
+            longest_ioc = max([len(grid["batches"][i]["input_prompts"][0]) for i in in_one_context_idxes])
 
-        #     for i in range(longest_ioc):
-        #         batchid_path = f"{grid['grid_info']['project_name']}/outputs/{grid['grid_info']['run_name']}/ioc/ioc_batch_ids-idx{i}.txt"
-        #         batchid_file = os.path.join(os.path.dirname(__file__), batchid_path)
+            for i in range(longest_ioc):
+                prev_batchid_path = f"{grid['grid_info']['project_name']}/outputs/{grid['grid_info']['run_name']}/ioc/ioc_batch_ids-idx{i}.txt"
+                prev_batchid_file = os.path.join(os.path.dirname(__file__), prev_batchid_path)
+                
+                with open(prev_batchid_file, "r") as bf:
+                    batchids = [line.strip().split(":")[-1] for line in bf]
+                
+                tries = 0
+                while(not agent.is_list_of_batch_all_done(batchids) and tries < MAX_CHECK_TRIES):
+                    print("waiting for all the ioc batches to finish...")
+                    tries += 1
+                    print("sleeping for 2s (change to 3 minutes ntar)")
+                    sleep(2)
+                
+                if tries == 5:
+                    raise TimeoutError("waited 5 times each 3 minutes already")
 
-        #         with open(batchid_file, "r") as bf:
-        #             batchids = [line.strip() for line in bf]
-        #         print(batchids)
-
-        #         tries = 0
-        #         while(not agent.is_list_of_batch_all_done(batchids) and tries < MAX_CHECK_TRIES):
-        #             print("waiting for all the ioc batches to finish...")
-        #             tries += 1
-        #             sleep(100)
-
-        #         # batch is done, extract and run next one
-        #         # extract
-        #         agent.extract_batch_results(
-        #             grid['grid_info']['project_name'],
-        #             grid['grid_info']['run_name'],
-        #             batchids
-        #         )
-
-        #         # run
-        #         for j in in_one_context_idxes:
-        #             if len(grid["data"][j]["input_prompts"][0]) <= longest_ioc:
-        #                 agent.run_batch(grid["grid_info"],
-        #                                 grid["data"][j]["config"],
-        #                                 grid["data"][j]["input_prompts"],
-        #                                 i+1)
+                # batch is done, extract and run next one                
+                # extract
+                print(f"=========================================")
+                print(f"message index {i} is done! extracting...")
+                agent.extract_batch_results(
+                    grid['grid_info']['project_name'],
+                    grid['grid_info']['run_name'],
+                    prev_batchid_file
+                )
+                print(f"message index {i} extracted")
+                
+                # run next one
+                for j in in_one_context_idxes:
+                    if i+1 < len(grid["batches"][j]["input_prompts"][0]):
+                        print(f"starting next one (message index {i+1}) for batch index {j} in {grid['grid_info']['run_name']}")
+                        agent.run_batch(grid["grid_info"],
+                                        grid["batches"][j]["config"],
+                                        grid["batches"][j]["input_prompts"],
+                                        i+1)
 
     def _instantiate_model_based_on_name(self, model_name):
         if model_name in OPENAI_MODELS:
@@ -118,34 +124,40 @@ class CustomOpenAIAgent():
                 history = json.load(file)
         else:
             history = {}
-
+        
         # constructing the requests ==================================================
         requests = []
-        this_batch_history = [[] for _ in range(len(input_prompts))]
+        messages = []
         
         # if idx of conversation is not 0, meaning there's a conversation.
-        # update `history` and `input_prompts` from said history
-        if config["in_one_context"]:
-            new_input_prompts = [row[ioc_idx] for row in input_prompts]
-            # TODO: update this_batch_history from whole history
-            # TODO: update input_prompts accordingly
-            input_prompts = new_input_prompts
+        # update `history` and `input_prompts` from said history            
 
-        for prompt_idx, prompt in enumerate(input_prompts):
-            this_batch_history[prompt_idx].append({
-                "role" : "user",
-                "content" : prompt
-            })
+        if config["in_one_context"]:
+            input_prompts = [row[ioc_idx] for row in input_prompts]        
+        
+        for pr_idx, pr in enumerate(input_prompts):
+                if (ioc_idx == 0):
+                    messages.append([{
+                        "role" : "user",
+                        "content" : pr,
+                    }])
+                else:
+                    messages.append(
+                        history[batch_name][pr_idx] +
+                        [{
+                            "role" : "user",
+                            "content" : pr,
+                        }]
+                    )
+
+        for msg_idx, msg in enumerate(messages):
             requests.append({
-                "custom_id": batch_name + f"-id{str(prompt_idx)}",
+                "custom_id": batch_name + f"-id{str(msg_idx)}",
                 "method": "POST",
                 "url": "/v1/chat/completions",
                 "body": {
                     "model": config["model_name"],
-                    "messages": [{
-                        "role": "user",
-                        "content": prompt
-                    }],
+                    "messages": msg,
                     **config.get("args", {})
                 }
             })
@@ -155,7 +167,7 @@ class CustomOpenAIAgent():
                 json.dump(item, f)
                 f.write('\n')
 
-        history[batch_name] = this_batch_history
+        history[batch_name] = messages
         with open(history_path, 'w') as file:
             json.dump(history, file, indent=4)
 
@@ -181,11 +193,12 @@ class CustomOpenAIAgent():
         #     }
         # )
         
-        batch_obj_id = f"{batch_name}:batch_676b91e1eddc8190bf405f41a73026fd"
-
         # TODO revert back to this
-        # print(f"batch created! batch id : {batch_obj.id}", end=" ---- ")
-        print(f"batch created! batch id : {batch_obj_id}", end=" ---- ")
+        # bid = batch_obj.id
+        bid = "batch_676b91e1eddc8190bf405f41a73026fd"
+        batch_obj_id = f"{batch_name}:{bid}"
+
+        print(f"batch created! batch id : {bid}", end=" ---- ")
 
         if(config["in_one_context"]):
             batchid_path = f"{grid_info['project_name']}/outputs/{grid_info['run_name']}/ioc/ioc_batch_ids-idx{ioc_idx}.txt"
@@ -197,8 +210,6 @@ class CustomOpenAIAgent():
         os.makedirs(os.path.dirname(batchid_file), exist_ok=True)
 
         with open(batchid_file, "a") as bidf:
-            # TODO revert back to this
-            # bidf.write(batch_obj.id + "\n")
             bidf.write(batch_obj_id + "\n")
     
     def is_list_of_batch_all_done(self, batch_numbers):
