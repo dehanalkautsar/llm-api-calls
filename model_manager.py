@@ -27,39 +27,39 @@ class ModelManager:
                             job["input_prompts"])
         print("grid finished submitting/running. continuing with in one context prompts...")
         
-        if len(in_one_context_idxes) > 0:
-            longest_ioc = max([len(grid["data"][i]["input_prompts"][0]) for i in in_one_context_idxes])
-            print("in one context prompts detected, running...")
+        # if len(in_one_context_idxes) > 0:
+        #     longest_ioc = max([len(grid["data"][i]["input_prompts"][0]) for i in in_one_context_idxes])
+        #     print("in one context prompts detected, running...")
 
-            for i in range(longest_ioc):
-                batchid_path = f"{grid['grid_info']['project_name']}/outputs/{grid['grid_info']['run_name']}/ioc/ioc_batch_ids_idx{i}.txt"
-                batchid_file = os.path.join(os.path.dirname(__file__), batchid_path)
+        #     for i in range(longest_ioc):
+        #         batchid_path = f"{grid['grid_info']['project_name']}/outputs/{grid['grid_info']['run_name']}/ioc/ioc_batch_ids-idx{i}.txt"
+        #         batchid_file = os.path.join(os.path.dirname(__file__), batchid_path)
 
-                with open(batchid_file, "r") as bf:
-                    batchids = [line.strip() for line in bf]
-                print(batchids)
+        #         with open(batchid_file, "r") as bf:
+        #             batchids = [line.strip() for line in bf]
+        #         print(batchids)
 
-                tries = 0
-                while(not agent.is_list_of_batch_all_done(batchids) and tries < MAX_CHECK_TRIES):
-                    print("waiting for all the ioc batches to finish...")
-                    tries += 1
-                    sleep(100)
+        #         tries = 0
+        #         while(not agent.is_list_of_batch_all_done(batchids) and tries < MAX_CHECK_TRIES):
+        #             print("waiting for all the ioc batches to finish...")
+        #             tries += 1
+        #             sleep(100)
 
-                # batch is done, extract and run next one
-                # extract
-                agent.extract_batch_results(
-                    grid['grid_info']['project_name'],
-                    grid['grid_info']['run_name'],
-                    batchids
-                )
+        #         # batch is done, extract and run next one
+        #         # extract
+        #         agent.extract_batch_results(
+        #             grid['grid_info']['project_name'],
+        #             grid['grid_info']['run_name'],
+        #             batchids
+        #         )
 
-                # run
-                for j in in_one_context_idxes:
-                    if len(grid["data"][j]["input_prompts"][0]) <= longest_ioc:
-                        agent.run_batch(grid["grid_info"],
-                                        grid["data"][j]["config"],
-                                        grid["data"][j]["input_prompts"],
-                                        i+1)
+        #         # run
+        #         for j in in_one_context_idxes:
+        #             if len(grid["data"][j]["input_prompts"][0]) <= longest_ioc:
+        #                 agent.run_batch(grid["grid_info"],
+        #                                 grid["data"][j]["config"],
+        #                                 grid["data"][j]["input_prompts"],
+        #                                 i+1)
 
     def _instantiate_model_based_on_name(self, model_name):
         if model_name in OPENAI_MODELS:
@@ -100,12 +100,12 @@ class CustomOpenAIAgent():
             input_dir_name = os.path.join(dirname, f"{grid_info['project_name']}/inputs/{grid_info['run_name']}/ioc/")
             output_dir_name = os.path.join(dirname, f"{grid_info['project_name']}/outputs/{grid_info['run_name']}/ioc/")
             just_file_name = f"{grid_info['run_name']}-{batch_name}_idx{ioc_idx}.jsonl"
-            history_file_name = f"history-{grid_info['run_name']}-{batch_name}-idx{ioc_idx}.json"
+            history_file_name = f"history-{grid_info['run_name']}-ioc.json"
         else:
             input_dir_name = os.path.join(dirname,f"{grid_info['project_name']}/inputs/{grid_info['run_name']}/")
             output_dir_name = os.path.join(dirname,f"{grid_info['project_name']}/outputs/{grid_info['run_name']}/")
             just_file_name = f"{grid_info['run_name']}-{batch_name}.jsonl"
-            history_file_name = f"history-{grid_info['run_name']}-{batch_name}.json"
+            history_file_name = f"history-{grid_info['run_name']}-sep.json"
 
         # making said files, such and such ==================================================
         inputs_path = os.path.join(input_dir_name, just_file_name)
@@ -132,7 +132,10 @@ class CustomOpenAIAgent():
             input_prompts = new_input_prompts
 
         for prompt_idx, prompt in enumerate(input_prompts):
-            this_batch_history[prompt_idx].append({"user" : prompt})
+            this_batch_history[prompt_idx].append({
+                "role" : "user",
+                "content" : prompt
+            })
             requests.append({
                 "custom_id": batch_name + f"-id{str(prompt_idx)}",
                 "method": "POST",
@@ -178,7 +181,7 @@ class CustomOpenAIAgent():
         #     }
         # )
         
-        batch_obj_id = "YEEEEEEHAW" + batch_name
+        batch_obj_id = f"{batch_name}:batch_676b91e1eddc8190bf405f41a73026fd"
 
         # TODO revert back to this
         # print(f"batch created! batch id : {batch_obj.id}", end=" ---- ")
@@ -199,47 +202,52 @@ class CustomOpenAIAgent():
             bidf.write(batch_obj_id + "\n")
     
     def is_list_of_batch_all_done(self, batch_numbers):
-        return True
-        # statuses = [self.model.batches.retrieve(bn).status for bn in batch_numbers]
-        # return all(batch == "completed" for batch in statuses)
+        statuses = [self.model.batches.retrieve(bn).status for bn in batch_numbers]
+        return all(batch == "completed" for batch in statuses)
 
-    def extract_batch_results(self, project_name, run_name, batch_numbers):
-        # TODO: update to the new history scheme
-        raw_results = []
-        quickview = {}
-        for bn in batch_numbers:
-            batch = self.model.batches.retrieve(bn)
-            print(f"batch_status {bn}", batch.status)
-            if batch.status == "completed":
-                file_content = self.model.files.content(batch.output_file_id)
-                file_content_string = file_content.content.decode('utf-8')
-                raw_results.append(file_content_string)
-                dct_strings = file_content_string.strip().split("\n")
-                for dct_string in dct_strings:
-                    data = json.loads(dct_string)
-                    prefix = self.get_prefix_from_id(data["custom_id"])
-                    if prefix in quickview:
-                        quickview[prefix].append({
-                            "id" : data["custom_id"].split("_")[-1],
-                            "messages" : data["response"]["body"]["choices"][0]["message"]["content"],
-                        })
-                    else:
-                        quickview[prefix] = [{
-                            "id" : data["custom_id"].split("_")[-1],
-                            "messages" : data["response"]["body"]["choices"][0]["message"]["content"],
-                        }]
+    def extract_batch_results(self, project_name, run_name, batch_ids_file):
+        if os.path.exists(batch_ids_file):
+            dirname = os.path.dirname(__file__)
+            # history file path
+            if '/ioc/' in str(batch_ids_file):
+                output_dir_name = os.path.join(dirname, f"{project_name}/outputs/{run_name}/ioc/")
+                history_file_name = f"history-{run_name}-ioc.json"
             else:
-                print(f"batch not done. batch status {batch.status}\nREMINDER: ye might need to rerun the check_results script to get the full results")
-        
-        base_output_path = os.path.join(os.path.dirname(__file__), f"{project_name}/outputs/{run_name}")
+                output_dir_name = os.path.join(dirname, f"{project_name}/outputs/{run_name}/")
+                history_file_name = f"history-{run_name}-sep.json"
+            
+            history_path = os.path.join(output_dir_name, history_file_name)
+            if os.path.exists(history_path):
+                # load history
+                with open(history_path, 'r') as h_file:
+                    history = json.load(h_file)
+                with open(batch_ids_file, "r") as b_file:
+                    batch_name_and_ids = b_file.read().splitlines()
 
-        # save raw
-        with open(f"{base_output_path}/raw_results.jsonl", "w") as f:
-            f.write("".join(raw_results))
-        
-        # save quick results
-        with open(f"{base_output_path}/quick_results.json", "w") as qf:
-            json.dump(quickview, qf, indent=4)
+                for bnid in batch_name_and_ids:
+                    bname_and_id = bnid.split(":")
+                    batchname = bname_and_id[0]
+                    batchid = bname_and_id[1]
+                    batch = self.model.batches.retrieve(batchid)
+                    if batch.status == "completed":
+                        file_content = self.model.files.content(batch.output_file_id)
+                        file_content_string = file_content.content.decode('utf-8')
+                        dct_strings = file_content_string.strip().split("\n")
+                        for idx, dct_string in enumerate(dct_strings):
+                            data = json.loads(dct_string)
+                            assistant_answer = data["response"]["body"]["choices"][0]["message"]["content"]
+                            history[batchname][idx].append({
+                                "role" : "assistant",
+                                "content" : assistant_answer
+                            })
+                
+                # save new history
+                with open(history_path, 'w') as hfile:
+                    json.dump(history, hfile, indent=4)
+            else:
+                raise FileNotFoundError(f"history file not found for {run_name}. make sure that experiment has been run")
+        else:
+            raise FileNotFoundError(f"batch ids file not found for {run_name}. make sure that experiment has been run")
 
     @staticmethod
     def get_prefix_from_id(id_string):

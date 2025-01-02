@@ -8,13 +8,5 @@ args = parser.parse_args()
 run_name = args.run_name
 
 batch_ids_file = os.path.join(os.path.dirname(__file__), "outputs", run_name, "batch_ids.txt")
-if os.path.exists(batch_ids_file):
-    with open(batch_ids_file, "r") as file:
-        batch_ids = file.read().splitlines()
-        # TODO: other LLM providers i.e. non OpenAI
-        model = CustomOpenAIAgent()
-        model.extract_batch_results(__package__, run_name, batch_ids)
-else:
-    raise FileNotFoundError(f"batch_ids.txt file not found for {run_name}. make sure that experiment has been run")
-
-
+model = CustomOpenAIAgent()
+model.extract_batch_results(__package__, run_name, batch_ids_file)

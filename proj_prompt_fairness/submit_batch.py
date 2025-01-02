@@ -27,6 +27,7 @@ grid = {
             "input_prompts" : [
                 ["What is the capital of Malaysia", "what is the currency", "what is the language"],
                 ["What is the capital of Indonesia", "what is the currency", "what is the language"],
+                ["What is the capital of Singapore", "what is the currency", "what is the language"],
             ]
         },
         {
@@ -41,6 +42,7 @@ grid = {
             "input_prompts" : [
                 "What is the capital of Slovakia",
                 "What is the capital of Ukraine",
+                "What is the capital of Russia",
             ]
         },
                 {
@@ -55,6 +57,7 @@ grid = {
             "input_prompts" : [
                 ["What is the capital of Vietnam", "what is the currency", "what is the language"],
                 ["What is the capital of Thailand", "what is the currency", "what is the language"],
+                ["What is the capital of Laos", "what is the currency", "what is the language"],
             ]
         },
         {
@@ -69,6 +72,7 @@ grid = {
             "input_prompts" : [
                 "What is the capital of Italy",
                 "What is the capital of Ireland",
+                "What is the capital of Spain",
             ]
         },
     ]
