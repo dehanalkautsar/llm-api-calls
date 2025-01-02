@@ -25,7 +25,7 @@ class ModelManager:
             agent.run_batch(grid["grid_info"],
                             job["config"],
                             job["input_prompts"])
-        print("grid finished submitting/running. continuing with in one context prompts...")
+        print("grid finished submitting/running. continuing with in one context prompts (if any)")
         if len(in_one_context_idxes) > 0:
             print("in one context prompts detected, running...")
             longest_ioc = max([len(grid["batches"][i]["input_prompts"][0]) for i in in_one_context_idxes])
@@ -97,9 +97,9 @@ class CustomOpenAIAgent():
         in1ctx = "ioc" if config["in_one_context"] else "sep"
         if("args" in config):
             arg_string = "-".join([f"{k}_{v}" for k, v in config["args"].items()])
-            batch_name = f"{config["model_name"].replace("-", "_")}-{in1ctx}-{arg_string}"
+            batch_name = f"{config["tag"]}-{config["model_name"].replace("-", "_")}-{in1ctx}-{arg_string}"
         else:
-            batch_name = f"{config["model_name"].replace("-", "_")}-{in1ctx}"
+            batch_name = f"{config["tag"]}-{config["model_name"].replace("-", "_")}-{in1ctx}"
 
         dirname = os.path.dirname(__file__)
         if(config["in_one_context"]):
