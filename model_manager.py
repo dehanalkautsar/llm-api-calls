@@ -31,7 +31,7 @@ class ModelManager:
             longest_ioc = max([len(grid["batches"][i]["input_prompts"][0]) for i in in_one_context_idxes])
 
             for i in range(longest_ioc):
-                prev_batchid_path = f"{grid['grid_info']['project_name']}/outputs/{grid['grid_info']['run_name']}/ioc/ioc_batch_ids-idx{i}.txt"
+                prev_batchid_path = f"{grid['grid_info']['project_name']}/{grid['grid_info']['run_name']}/outputs/ioc/ioc_batch_ids-idx{i}.txt"
                 prev_batchid_file = os.path.join(os.path.dirname(__file__), prev_batchid_path)
                 
                 with open(prev_batchid_file, "r") as bf:
@@ -103,13 +103,13 @@ class CustomOpenAIAgent():
 
         dirname = os.path.dirname(__file__)
         if(config["in_one_context"]):
-            input_dir_name = os.path.join(dirname, f"{grid_info['project_name']}/inputs/{grid_info['run_name']}/ioc/")
-            output_dir_name = os.path.join(dirname, f"{grid_info['project_name']}/outputs/{grid_info['run_name']}/ioc/")
+            input_dir_name = os.path.join(dirname, f"{grid_info['project_name']}/{grid_info['run_name']}/inputs/ioc/")
+            output_dir_name = os.path.join(dirname, f"{grid_info['project_name']}/{grid_info['run_name']}/outputs/ioc/")
             just_file_name = f"{grid_info['run_name']}-{batch_name}_idx{ioc_idx}.jsonl"
             history_file_name = f"history-{grid_info['run_name']}-ioc.json"
         else:
-            input_dir_name = os.path.join(dirname,f"{grid_info['project_name']}/inputs/{grid_info['run_name']}/")
-            output_dir_name = os.path.join(dirname,f"{grid_info['project_name']}/outputs/{grid_info['run_name']}/")
+            input_dir_name = os.path.join(dirname,f"{grid_info['project_name']}/{grid_info['run_name']}/inputs/")
+            output_dir_name = os.path.join(dirname,f"{grid_info['project_name']}/{grid_info['run_name']}/outputs/")
             just_file_name = f"{grid_info['run_name']}-{batch_name}.jsonl"
             history_file_name = f"history-{grid_info['run_name']}-sep.json"
 
@@ -201,9 +201,9 @@ class CustomOpenAIAgent():
         print(f"batch created! batch id : {bid}", end=" ---- ")
 
         if(config["in_one_context"]):
-            batchid_path = f"{grid_info['project_name']}/outputs/{grid_info['run_name']}/ioc/ioc_batch_ids-idx{ioc_idx}.txt"
+            batchid_path = f"{grid_info['project_name']}/{grid_info['run_name']}/outputs/ioc/ioc_batch_ids-idx{ioc_idx}.txt"
         else:
-            batchid_path = f"{grid_info['project_name']}/outputs/{grid_info['run_name']}/batch_ids.txt"
+            batchid_path = f"{grid_info['project_name']}/{grid_info['run_name']}/outputs/batch_ids.txt"
         
         print(f"saving in: {batchid_path}")
         batchid_file = os.path.join(os.path.dirname(__file__), batchid_path)
@@ -221,10 +221,10 @@ class CustomOpenAIAgent():
             dirname = os.path.dirname(__file__)
             # history file path
             if '/ioc/' in str(batch_ids_file):
-                output_dir_name = os.path.join(dirname, f"{project_name}/outputs/{run_name}/ioc/")
+                output_dir_name = os.path.join(dirname, f"{project_name}/{run_name}/outputs/ioc/")
                 history_file_name = f"history-{run_name}-ioc.json"
             else:
-                output_dir_name = os.path.join(dirname, f"{project_name}/outputs/{run_name}/")
+                output_dir_name = os.path.join(dirname, f"{project_name}/{run_name}/outputs/")
                 history_file_name = f"history-{run_name}-sep.json"
             
             history_path = os.path.join(output_dir_name, history_file_name)

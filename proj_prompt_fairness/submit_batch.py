@@ -12,7 +12,7 @@ with open(os.path.join(package_dir, 'us_gender_percentage_pay.json'), "r") as fi
 grid = {
     "grid_info" : {
         "project_name" : __package__,
-        "run_name" : "testdua",
+        "run_name" : "testmpat",
     },
     "batches" : [
         {
@@ -30,51 +30,51 @@ grid = {
                 ["What is the capital of Singapore", "what is the currency", "what is the language"],
             ]
         },
-        # {
-        #     "config" : {
-        #         "model_name" : "gpt-4o-mini",
-        #         "in_one_context" : False,
-        #         "args" : {
-        #             "temperature" : 1,
-        #             "top_p" : 0,
-        #         }
-        #     },
-        #     "input_prompts" : [
-        #         "What is the capital of Slovakia",
-        #         "What is the capital of Ukraine",
-        #         "What is the capital of Russia",
-        #     ]
-        # },
-        #         {
-        #     "config" : {
-        #         "model_name" : "gpt-4o-mini",
-        #         "in_one_context" : True,
-        #         "args" : {
-        #             "temperature" : 0,
-        #             "top_p" : 0,
-        #         }
-        #     },
-        #     "input_prompts" : [
-        #         ["What is the capital of Vietnam", "what is the currency"],
-        #         ["What is the capital of Thailand", "what is the currency"],
-        #         ["What is the capital of Laos", "what is the currency"],
-        #     ]
-        # },
-        # {
-        #     "config" : {
-        #         "model_name" : "gpt-4o-mini",
-        #         "in_one_context" : False,
-        #         "args" : {
-        #             "temperature" : 1,
-        #             "top_p" : 1,
-        #         }
-        #     },
-        #     "input_prompts" : [
-        #         "What is the capital of Italy",
-        #         "What is the capital of Ireland",
-        #         "What is the capital of Spain",
-        #     ]
-        # },
+        {
+            "config" : {
+                "model_name" : "gpt-4o-mini",
+                "in_one_context" : False,
+                "args" : {
+                    "temperature" : 1,
+                    "top_p" : 0,
+                }
+            },
+            "input_prompts" : [
+                "What is the capital of Slovakia",
+                "What is the capital of Ukraine",
+                "What is the capital of Russia",
+            ]
+        },
+        {
+            "config" : {
+                "model_name" : "gpt-4o-mini",
+                "in_one_context" : True,
+                "args" : {
+                    "temperature" : 0,
+                    "top_p" : 0,
+                }
+            },
+            "input_prompts" : [
+                ["What is the capital of Vietnam", "what is the currency"],
+                ["What is the capital of Thailand", "what is the currency"],
+                ["What is the capital of Laos", "what is the currency"],
+            ]
+        },
+        {
+            "config" : {
+                "model_name" : "gpt-4o-mini",
+                "in_one_context" : False,
+                "args" : {
+                    "temperature" : 1,
+                    "top_p" : 1,
+                }
+            },
+            "input_prompts" : [
+                "What is the capital of Italy",
+                "What is the capital of Ireland",
+                "What is the capital of Spain",
+            ]
+        },
     ]
 }
 
