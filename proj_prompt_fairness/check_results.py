@@ -13,7 +13,7 @@ if os.path.exists(batch_ids_file):
         batch_ids = file.read().splitlines()
         # TODO: other LLM providers i.e. non OpenAI
         model = CustomOpenAIAgent()
-        model.check_and_download_batches(__package__, run_name, batch_ids)
+        model.extract_batch_results(__package__, run_name, batch_ids)
 else:
     raise FileNotFoundError(f"batch_ids.txt file not found for {run_name}. make sure that experiment has been run")
 
