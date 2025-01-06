@@ -1,3 +1,8 @@
+.DS_store
+
+# ignore project files
+proj_*/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
