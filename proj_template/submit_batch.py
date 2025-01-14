@@ -1,9 +1,10 @@
+import os, json
 from model_manager import ModelManager
 
 grid = {
     "grid_info" : {
         "project_name" : __package__,
-        "run_name" : "test_run",
+        "run_name" : "test_run2",
     },
     "batches" : [
         {
@@ -72,6 +73,11 @@ grid = {
         },
     ]
 }
+
+grid_path = f"{__package__}/{grid['grid_info']['run_name']}/submitted_grid.json"
+os.makedirs(os.path.dirname(grid_path), exist_ok=True)
+with open(grid_path, "w") as gg:
+    json.dump(grid, gg, indent=4)
 
 modman = ModelManager()
 modman.run_grid(grid)

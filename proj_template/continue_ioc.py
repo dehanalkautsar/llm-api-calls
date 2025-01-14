@@ -18,8 +18,7 @@ for batch in grid['batches']:
         conv_lengths.append(len(batch['input_prompts'][0]))
 
 max_conv_length = max(conv_lengths)
-ioc_output_dir = f"{__package__}/{run_name}/outputs/ioc"
-
+ioc_output_dir = f"{__package__}/{run_name}/outputs/ioc_batchids"
 
 modman = ModelManager()
 for i in range(max_conv_length):
