@@ -2,6 +2,7 @@
 
 # ignore project files
 # proj_*/
+slurm*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
