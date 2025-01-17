@@ -13,7 +13,7 @@ supported models:
 3. define your prompts in `submit_batch.py` just follow the format of the already existing example (and adjust the `run_name`)
 4. `python -m proj_template.submit_batch` but change `proj_template` to your newly created project folder
 5. wait
-6. for non in-one-context batches, it wont check automatically. so you need to run `python -m proj_prompt_fairness.check_results --run_name test_run`
+6. for non in-one-context batches, it wont check automatically. so you need to run `python -m proj_template.check_results --run_name test_run`
 7. results are in `proj_name/outputs`
 8. want to run again? just go back to step 3, and dont forget to change `run_name` so you dont overwrite the old run
 
